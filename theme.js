@@ -1,26 +1,25 @@
-// theme.js
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#52796f',       // Cor primária
-      contrastText: '#ffffff' // Cor do texto sobre o primário
+      main: '#52796f',
+      contrastText: '#ffffff'
     },
     secondary: {
-      main: '#0077b6',       // Cor secundária
+      main: '#0077b6',
       contrastText: '#ffffff'
     },
     error: {
-      main: '#d32f2f',       // Cor para erros
+      main: '#d32f2f',
     },
     background: {
-      default: '#fefae0',    // Cor de fundo padrão
-      paper: '#ccd5ae'       // Fundo de componentes tipo "paper"
+      default: '#fefae0',
+      paper: '#ccd5ae'
     },
     text: {
-      primary: '#283618',    // Cor principal do texto
-      secondary: '#606c38',  // Cor secundária do texto
+      primary: '#283618',
+      secondary: '#606c38',
     },
   },
   typography: {
@@ -40,9 +39,9 @@ const theme = createTheme({
       lineHeight: 1.5,
     },
   },
-  spacing: 8, // Multiplicador padrão para espaçamentos
+  spacing: 8,
   shape: {
-    borderRadius: 8, // Raio de borda global para componentes
+    borderRadius: 8,
   },
   breakpoints: {
     values: {
@@ -57,8 +56,8 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          textTransform: 'none', // Remove a transformação padrão de texto (maiúsculas)
-          borderRadius: 8,       // Sobrescreve o borderRadius para botões
+          textTransform: 'none',
+          borderRadius: 8,
           padding: '8px 16px',
         },
       },
@@ -66,7 +65,14 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          boxShadow: 'none',     // Remove a sombra padrão do AppBar
+          boxShadow: 'none',
+        },
+      },
+    },
+    MuiLink: {
+      styleOverrides: {
+        root: {
+          textDecoration: 'none', // Remove o sublinhado dos links
         },
       },
     },
@@ -74,4 +80,3 @@ const theme = createTheme({
 });
 
 export default theme;
-

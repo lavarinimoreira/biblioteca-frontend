@@ -1,5 +1,7 @@
 import { GlobalStyles } from '@mui/material';
 import Providers from './providers';
+import { AuthProvider } from '../contexts/AuthContext'
+import Navbar from '../components/Navbar'
 
 export const metadata = {
   title: "Biblioteca",
@@ -14,14 +16,19 @@ export default function RootLayout({ children }) {
       <body>
       <GlobalStyles styles={{
           body: {
-            margin: 0,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
+            // margin: 0,
+            // display: 'flex',
+            // justifyContent: 'center',
+            // alignItems: 'center',
             // minHeight: '100vh'
           }
         }} />
-        <Providers>{children}</Providers>
+        <Providers>
+          <AuthProvider>
+            <Navbar />
+            {children}
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

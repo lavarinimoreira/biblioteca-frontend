@@ -7,7 +7,6 @@ import adapt_image_url from '@/services/api/adapt_image_url'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export async function getBooks({ titulo = '', autor = '', genero = '', skip = 0, limit = 10 } = {}) {
-  // Cria os parâmetros da query string
   const params = new URLSearchParams();
   if (titulo) params.append('titulo', titulo);
   if (autor) params.append('autor', autor);
@@ -15,7 +14,6 @@ export async function getBooks({ titulo = '', autor = '', genero = '', skip = 0,
   params.append('skip', skip);
   params.append('limit', limit);
 
-  // Monta a URL completa com os parâmetros
   const response = await fetch(`${API_URL}/livros?${params.toString()}`);
 
   if (!response.ok) {
@@ -25,11 +23,15 @@ export async function getBooks({ titulo = '', autor = '', genero = '', skip = 0,
   const data = await response.json();
 
   // Atualiza a URL da imagem para cada livro utilizando a função adapt_image_url
-  return data.map((book) => ({
-    ...book,
-    image_url: adapt_image_url(book.image_url),
-  }));
+  return {
+    livros: data.livros.map((book) => ({
+      ...book,
+      image_url: adapt_image_url(book.image_url),
+    })),
+    total: data.total
+  };
 }
+
 
 // Obter livro por id
 export async function obterLivroPorId(livroId) {
