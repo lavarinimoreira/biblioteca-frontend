@@ -7,9 +7,12 @@ import Box from '@mui/material/Box'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
+import NavbarClient from './NavbarClient'
+import NavbarAdmin from './NavbarAdmin'
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext)
+  
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -21,18 +24,8 @@ const Navbar = () => {
               <Button color="inherit">Home</Button>
             </Link>
           </Typography>
-          {user ? (
-            <>
-              <Link href="/profile" passHref legacyBehavior>
-                <Button color="inherit">Perfil</Button>
-              </Link>
-              <Link href="/emprestimos" passHref legacyBehavior>
-                <Button color="inherit">Emprestimos</Button>
-              </Link>
-              <Button color="inherit" onClick={logout}>
-                Logout
-              </Button>
-            </>
+          {user ? ( user.grupo_politica === "admin" ?
+            <NavbarAdmin/> : <NavbarClient/>
           ) : (
             <>
               <Link href="/login" passHref legacyBehavior>

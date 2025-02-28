@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import BooksList from "@/components/book/Book";
+import BooksList from "@/components/books/Books";
 import { Box, Button, TextField } from '@mui/material';
 
 export default function HomePage() {

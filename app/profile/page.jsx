@@ -1,85 +1,52 @@
 'use client'
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import Container from '@mui/material/Container'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
-import Typography from '@mui/material/Typography'
-import Avatar from '@mui/material/Avatar'
-import Box from '@mui/material/Box'
-import CircularProgress from '@mui/material/CircularProgress'
-import { format } from 'date-fns'
-import adaptImageUrl from '@/services/api/adapt_image_url' // ajuste o caminho conforme necessário
+import { useState, useEffect } from 'react';
+import { fetchUserProfile } from '@/services/api/consumir_rotas/users'; // Importa o serviço
+import adaptImageUrl from '@/services/api/adapt_image_url'; // Ajuste o caminho conforme necessário
+import Container from '@mui/material/Container';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Avatar from '@mui/material/Avatar';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
+import { format } from 'date-fns';
+import Link from 'next/link';
+import { Button } from '@mui/material';
 
-// Função para decodificar um JWT
-function parseJwt(token) {
-  try {
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    )
-    return JSON.parse(jsonPayload)
-  } catch (error) {
-    console.error('Erro ao decodificar o token:', error)
-    return null
-  }
-}
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const loadProfile = async () => {
       try {
-        const token = localStorage.getItem('token')
+        const token = localStorage.getItem('token');
         if (!token) {
-          setError('Usuário não autenticado.')
-          setLoading(false)
-          return
+          throw new Error('Usuário não autenticado.');
         }
 
-        // Decodifica o token para obter o ID do usuário
-        const decoded = parseJwt(token)
-        const userId = decoded?.id || decoded?.sub
-        if (!userId) {
-          setError('ID de usuário não encontrado no token.')
-          setLoading(false)
-          return
-        }
-
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-        const response = await axios.get(`${API_URL}/usuarios/${userId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        
-        // Adapta a URL da imagem usando a função adaptImageUrl
-        const profileData = response.data
-        profileData.profile_picture_url = adaptImageUrl(profileData.profile_picture_url)
-        
-        setProfile(profileData)
+        const profileData = await fetchUserProfile(token); // Usa o serviço para buscar o perfil
+        profileData.profile_picture_url = adaptImageUrl(profileData.profile_picture_url); // Adapta a URL da imagem
+        setProfile(profileData);
       } catch (err) {
-        console.error(err)
-        setError('Erro ao carregar o perfil.')
+        console.error(err);
+        setError(err.message || 'Erro ao carregar o perfil.');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchProfile()
-  }, [])
+    loadProfile();
+  }, []);
 
   if (loading) {
     return (
       <Container sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <CircularProgress />
       </Container>
-    )
+    );
   }
 
   if (error) {
@@ -89,7 +56,17 @@ export default function ProfilePage() {
           {error}
         </Typography>
       </Container>
-    )
+    );
+  }
+
+  if (!profile) {
+    return (
+      <Container sx={{ mt: 4 }}>
+        <Typography variant="h6" color="error">
+          Perfil não encontrado.
+        </Typography>
+      </Container>
+    );
   }
 
   return (
@@ -105,7 +82,7 @@ export default function ProfilePage() {
               />
             ) : (
               <Avatar sx={{ width: 80, height: 80, mr: 2 }}>
-                {profile.nome.charAt(0)}
+                {profile.nome?.charAt(0)}
               </Avatar>
             )}
             <Typography variant="h5">{profile.nome}</Typography>
@@ -124,9 +101,6 @@ export default function ProfilePage() {
             </Typography>
           )}
           <Typography variant="body1">
-            <strong>Grupo Política:</strong> {profile.grupo_politica}
-          </Typography>
-          <Typography variant="body1">
             <strong>Data Criação:</strong>{' '}
             {profile.data_criacao
               ? format(new Date(profile.data_criacao), 'dd/MM/yyyy HH:mm')
@@ -139,7 +113,10 @@ export default function ProfilePage() {
             </Typography>
           )}
         </CardContent>
+        <Link href="/profile/update">
+          <Button>Editar</Button>
+        </Link>
       </Card>
     </Container>
-  )
+  );
 }

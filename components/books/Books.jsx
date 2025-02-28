@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getBooks } from '@/services/api/books/books';
+import { getBooks } from '@/services/api/consumir_rotas/books';
 import { Card, CardMedia, CardContent, Typography, Grid2, Box, Pagination } from '@mui/material';
 import Link from 'next/link';
 

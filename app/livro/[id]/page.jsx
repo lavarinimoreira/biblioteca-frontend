@@ -1,5 +1,5 @@
 import { Card, CardContent, CardMedia, Typography, Box, Button } from '@mui/material';
-import { obterLivroPorId } from '@/services/api/books/books';
+import { obterLivroPorId } from '@/services/api/consumir_rotas/books';
 import Link from 'next/link';
 
 export default async function BookPage({ params }) {
