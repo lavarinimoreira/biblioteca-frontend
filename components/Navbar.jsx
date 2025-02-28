@@ -11,7 +11,7 @@ import NavbarClient from './NavbarClient'
 import NavbarAdmin from './NavbarAdmin'
 
 const Navbar = () => {
-  const { user, logout } = useContext(AuthContext)
+  const { user } = useContext(AuthContext)
   
 
   return (
@@ -21,12 +21,17 @@ const Navbar = () => {
           {/* Link para Home */}
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             <Link href="/" passHref legacyBehavior>
-              <Button color="inherit">Home</Button>
+              <Button color="inherit">Início</Button>
             </Link>
           </Typography>
-          {user ? ( user.grupo_politica === "admin" ?
-            <NavbarAdmin/> : <NavbarClient/>
+
+          {user ? (
+            // Verifica se o usuário tem a permissão "admin.create"
+            user.permissoes.includes('admin.create') ? (
+              <NavbarAdmin/>
+            ) : <NavbarClient />
           ) : (
+            // Links para usuários não autenticados
             <>
               <Link href="/login" passHref legacyBehavior>
                 <Button color="inherit">Login</Button>

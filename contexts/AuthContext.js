@@ -16,11 +16,11 @@ export const AuthProvider = ({ children }) => {
       const decoded = parseJwt(token) // Decodifica o token
       if (decoded) {
         // Extrai o `id` e `grupo_politica` do token
-        const { id, grupo_politica } = decoded
-        if (id && grupo_politica) {
-          setUser({ id, grupo_politica }) // Define o usuário no estado
+        const { id, permissoes, sub } = decoded
+        if (id && sub && permissoes) {
+          setUser({ id, permissoes, sub }) // Define o usuário no estado
         } else {
-          console.error('Token não contém id ou grupo_politica.')
+          console.error('Token não contém id ou grupo_politica ou permissões.')
         }
       }
     } catch (error) {
