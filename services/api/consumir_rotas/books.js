@@ -1,5 +1,6 @@
 // services/api/books/books.js
 
+import axios from 'axios'
 import adapt_image_url from '@/services/api/adapt_image_url'
 
 
@@ -54,5 +55,59 @@ export async function obterLivroPorId(livroId) {
   } catch (error) {
     console.error('Erro ao obter o livro:', error);
     throw error;
+  }
+}
+
+/**
+ * Função para criar um novo livro.
+ * @param {Object} livroData - Dados do livro a serem enviados para a API.
+ * @param {string} token - Token JWT para autenticação.
+ * @returns {Promise<Object>} - Retorna os dados do livro criado.
+ */
+export const criarLivro = async (livroData, token) => {
+  try {
+    const response = await axios.post(`${API_URL}/livros/`, livroData, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data
+  } catch (error) {
+    console.error('Erro ao criar livro:', error)
+    throw error.response?.data?.detail || 'Erro ao criar livro.'
+  }
+}
+
+/**
+ * Função para atualizar um livro.
+ * @param {number} livroId - ID do livro.
+ * @param {Object} livroUpdate - Dados de atualização do livro.
+ * @param {string} token - Token JWT para autenticação.
+ * @returns {Promise<Object>} - Retorna os dados do livro atualizado.
+ */
+export const atualizarLivro = async (livroId, livroUpdate, token) => {
+  try {
+    const response = await axios.put(`${API_URL}/livros/${livroId}`, livroUpdate, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data
+  } catch (error) {
+    console.error('Erro ao atualizar livro:', error)
+    throw error.response?.data?.detail || 'Erro ao atualizar livro.'
+  }
+}
+
+/**
+ * Função para deletar um livro.
+ * @param {number} livroId - ID do livro.
+ * @param {string} token - Token JWT para autenticação.
+ * @returns {Promise<void>}
+ */
+export const deletarLivro = async (livroId, token) => {
+  try {
+    await axios.delete(`${API_URL}/livros/${livroId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+  } catch (error) {
+    console.error('Erro ao deletar livro:', error)
+    throw error.response?.data?.detail || 'Erro ao deletar livro.'
   }
 }
