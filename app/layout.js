@@ -1,3 +1,5 @@
+
+
 import { GlobalStyles } from '@mui/material';
 import Providers from './providers';
 import { AuthProvider } from '../contexts/AuthContext'
@@ -12,7 +14,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang='en' suppressHydrationWarning>
       <body>
       <GlobalStyles styles={{
           body: {

@@ -9,9 +9,10 @@ import {
 } from '@/services/api/consumir_rotas/loans'
 import { 
   Box, Typography, Button, TextField, Dialog, DialogTitle, 
-  DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem 
+  DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, IconButton 
 } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid'
+import { Edit, Delete } from '@mui/icons-material'
 
 const EmprestimosPage = () => {
   const { user } = useContext(AuthContext)
@@ -126,7 +127,7 @@ const EmprestimosPage = () => {
     }
   }
 
-  // Definição das colunas para o DataGrid, com a ação de editar atualizada
+  // Definição das colunas para o DataGrid, com ações utilizando ícones
   const columns = [
     { field: 'id', headerName: 'ID', width: 90 },
     { field: 'usuario_id', headerName: 'ID do Usuário', width: 150 },
@@ -158,19 +159,12 @@ const EmprestimosPage = () => {
       sortable: false,
       renderCell: (params) => (
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant="outlined"
-            onClick={() => handleOpenEditDialog(params.row)}
-          >
-            Editar
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={() => handleDeletarEmprestimo(params.row.id)}
-          >
-            Deletar
-          </Button>
+          <IconButton onClick={() => handleOpenEditDialog(params.row)}>
+            <Edit />
+          </IconButton>
+          <IconButton color="error" onClick={() => handleDeletarEmprestimo(params.row.id)}>
+            <Delete />
+          </IconButton>
         </Box>
       )
     }

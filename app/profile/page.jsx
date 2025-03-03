@@ -1,7 +1,8 @@
 'use client'
-import { useState, useEffect } from 'react';
-import { fetchUserProfile } from '@/services/api/consumir_rotas/users'; // Importa o serviço
-import adaptImageUrl from '@/services/api/adapt_image_url'; // Ajuste o caminho conforme necessário
+import { useState, useEffect, useRef } from 'react';
+import { fetchUserProfile, atualizarUsuario } from '@/services/api/consumir_rotas/users';
+import { uploadProfilePicture } from '@/services/api/consumir_rotas/files';
+import adaptImageUrl from '@/services/api/adapt_image_url';
 import Container from '@mui/material/Container';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -10,14 +11,16 @@ import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { format } from 'date-fns';
-import Link from 'next/link';
-import { Button } from '@mui/material';
-
+import { Button, IconButton, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Edit, PhotoCamera } from '@mui/icons-material';
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
+  const [profileForm, setProfileForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -26,10 +29,15 @@ export default function ProfilePage() {
         if (!token) {
           throw new Error('Usuário não autenticado.');
         }
-
-        const profileData = await fetchUserProfile(token); // Usa o serviço para buscar o perfil
-        profileData.profile_picture_url = adaptImageUrl(profileData.profile_picture_url); // Adapta a URL da imagem
+        const profileData = await fetchUserProfile(token);
+        profileData.profile_picture_url = adaptImageUrl(profileData.profile_picture_url);
         setProfile(profileData);
+        setProfileForm({
+          nome: profileData.nome,
+          email: profileData.email,
+          telefone: profileData.telefone || '',
+          endereco_completo: profileData.endereco_completo || ''
+        });
       } catch (err) {
         console.error(err);
         setError(err.message || 'Erro ao carregar o perfil.');
@@ -69,9 +77,62 @@ export default function ProfilePage() {
     );
   }
 
+  // Abre o input para atualizar a imagem
+  const handleOpenUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Lida com o envio do arquivo e atualiza o perfil com a nova imagem
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      // Chama a função de upload passando o ID do usuário
+      const updatedProfile = await uploadProfilePicture(profile.id, file, token);
+      setProfile(updatedProfile);
+    } catch (err) {
+      console.error(err);
+      setError('Erro ao atualizar a imagem de perfil.');
+    } finally {
+      setLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Abre o diálogo para edição
+  const handleOpenEditDialog = () => {
+    setOpenEditDialog(true);
+  };
+
+  // Atualiza os valores do formulário
+  const handleProfileFormChange = (e) => {
+    const { name, value } = e.target;
+    setProfileForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Salva as alterações do perfil
+  const handleSaveProfile = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const updatedProfile = await atualizarUsuario(profile.id, profileForm, token);
+      setProfile(updatedProfile);
+      setOpenEditDialog(false);
+    } catch (err) {
+      console.error(err);
+      setError('Erro ao atualizar o perfil.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Container sx={{ mt: 4 }}>
-      <Card sx={{ maxWidth: 600, mx: 'auto' }}>
+      <Card sx={{ maxWidth: 600, mx: 'auto', p: 2 }}>
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             {profile.profile_picture_url ? (
@@ -85,7 +146,17 @@ export default function ProfilePage() {
                 {profile.nome?.charAt(0)}
               </Avatar>
             )}
-            <Typography variant="h5">{profile.nome}</Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Typography variant="h5">{profile.nome}</Typography>
+              <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                <IconButton onClick={handleOpenEditDialog} size="small">
+                  <Edit />
+                </IconButton>
+                <IconButton onClick={handleOpenUpload} size="small">
+                  <PhotoCamera />
+                </IconButton>
+              </Box>
+            </Box>
           </Box>
           <Typography variant="body1">
             <strong>Email:</strong> {profile.email}
@@ -102,9 +173,7 @@ export default function ProfilePage() {
           )}
           <Typography variant="body1">
             <strong>Data Criação:</strong>{' '}
-            {profile.data_criacao
-              ? format(new Date(profile.data_criacao), 'dd/MM/yyyy HH:mm')
-              : '-'}
+            {profile.data_criacao ? format(new Date(profile.data_criacao), 'dd/MM/yyyy HH:mm') : '-'}
           </Typography>
           {profile.data_atualizacao && (
             <Typography variant="body1">
@@ -113,10 +182,51 @@ export default function ProfilePage() {
             </Typography>
           )}
         </CardContent>
-        <Link href="/profile/update">
-          <Button>Editar</Button>
-        </Link>
       </Card>
+
+      {/* Input de arquivo oculto para upload de imagem */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+        accept="image/*"
+      />
+
+      {/* Diálogo de edição do perfil */}
+      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
+        <DialogTitle>Editar Perfil</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+          <TextField
+            label="Nome"
+            name="nome"
+            value={profileForm?.nome || ''}
+            onChange={handleProfileFormChange}
+          />
+          <TextField
+            label="Email"
+            name="email"
+            value={profileForm?.email || ''}
+            onChange={handleProfileFormChange}
+          />
+          <TextField
+            label="Telefone"
+            name="telefone"
+            value={profileForm?.telefone || ''}
+            onChange={handleProfileFormChange}
+          />
+          <TextField
+            label="Endereço"
+            name="endereco_completo"
+            value={profileForm?.endereco_completo || ''}
+            onChange={handleProfileFormChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenEditDialog(false)}>Cancelar</Button>
+          <Button onClick={handleSaveProfile} variant="contained">Salvar</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

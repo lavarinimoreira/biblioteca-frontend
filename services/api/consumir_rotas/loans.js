@@ -32,7 +32,6 @@ export const criarEmprestimo = async (emprestimoData, token) => {
 
 /**
  * Função para listar todos os empréstimos do sistema.
- * Apenas usuários com a permissão "admin.read" podem acessar essa rota.
  *
  * @param {string} token - Token JWT para autenticação.
  * @returns {Promise<Array>} - Retorna a lista completa de empréstimos.

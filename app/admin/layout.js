@@ -36,10 +36,10 @@ export default function AdminLayout({ children }) {
         <Box sx={{ overflow: 'auto' }}>
           <List>
             {[
-              { label: 'Grupos', href: '/admin/grupos' },
               { label: 'Usuários', href: '/admin/usuarios' },
+              { label: 'Livros', href: '/admin/livros' },
               { label: 'Empréstimos', href: '/admin/emprestimos' },
-              { label: 'Livros', href: '/admin/livros' }
+              { label: 'Grupos', href: '/admin/grupos' }                          
             ].map((item) => (
               <Link key={item.href} href={item.href} passHref legacyBehavior>
                 <ListItemButton>
