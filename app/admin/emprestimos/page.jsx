@@ -1,4 +1,6 @@
 'use client'
+
+import { withAuth } from '@/components/higher_order_component/withAuth';
 import React, { useState, useEffect, useContext } from 'react'
 import { AuthContext } from '@/contexts/AuthContext'
 import { 
@@ -254,4 +256,4 @@ const EmprestimosPage = () => {
   )
 }
 
-export default EmprestimosPage
+export default withAuth(EmprestimosPage, 'admin.create');

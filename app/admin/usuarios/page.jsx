@@ -1,4 +1,6 @@
 'use client'
+
+import { withAuth } from '@/components/higher_order_component/withAuth';
 import React, { useState, useEffect, useRef, useContext } from 'react'
 import { AuthContext } from '@/contexts/AuthContext'
 import { format, parseISO } from 'date-fns';
@@ -389,4 +391,4 @@ const AdminUsersPage = () => {
   )
 }
 
-export default AdminUsersPage
+export default withAuth(AdminUsersPage, 'admin.create');

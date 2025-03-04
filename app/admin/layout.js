@@ -39,7 +39,8 @@ export default function AdminLayout({ children }) {
               { label: 'Usuários', href: '/admin/usuarios' },
               { label: 'Livros', href: '/admin/livros' },
               { label: 'Empréstimos', href: '/admin/emprestimos' },
-              { label: 'Grupos', href: '/admin/grupos' }                          
+              { label: 'Grupos', href: '/admin/grupos' },
+              { label: 'Permissões', href: '/admin/permissoes' }                            
             ].map((item) => (
               <Link key={item.href} href={item.href} passHref legacyBehavior>
                 <ListItemButton>

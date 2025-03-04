@@ -1,4 +1,6 @@
 'use client'
+
+import { withAuth } from '@/components/higher_order_component/withAuth';
 import React, { useState, useEffect, useContext, useRef } from 'react'
 import { AuthContext } from '@/contexts/AuthContext'
 import { 
@@ -328,4 +330,4 @@ const AdminBooksPage = () => {
   )
 }
 
-export default AdminBooksPage
+export default withAuth(AdminBooksPage, 'admin.create');
