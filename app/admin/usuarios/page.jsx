@@ -1,16 +1,17 @@
 'use client'
 
 import { withAuth } from '@/components/higher_order_component/withAuth';
-import React, { useState, useEffect, useRef, useContext } from 'react'
-import { AuthContext } from '@/contexts/AuthContext'
-import { format, parseISO } from 'date-fns';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { AuthContext } from '@/contexts/AuthContext';
+import { format } from 'date-fns';
 import {
   listarUsuarios,
   criarUsuario,
   atualizarUsuario,
-  deletarUsuario
-} from '@/services/api/consumir_rotas/users'
-import { uploadProfilePicture } from '@/services/api/consumir_rotas/files'
+  deletarUsuario,
+} from '@/services/api/consumir_rotas/users';
+import {listarGruposPolitica }from '@/services/api/consumir_rotas/policy_groups';
+import { uploadProfilePicture } from '@/services/api/consumir_rotas/files';
 import {
   Box,
   Button,
@@ -25,182 +26,189 @@ import {
   Select,
   MenuItem,
   IconButton
-} from '@mui/material'
-import { DataGrid } from '@mui/x-data-grid'
-import { Add, Edit, Delete, PhotoCamera } from '@mui/icons-material'
+} from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import { Add, Edit, Delete, PhotoCamera } from '@mui/icons-material';
 
 const AdminUsersPage = () => {
-  const { user } = useContext(AuthContext)
+  const { user } = useContext(AuthContext);
 
-  // Lista de usuários e estado de carregamento/erro
-  const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [users, setUsers] = useState([]);
+  const [gruposPolitica, setGruposPolitica] = useState([]); // estado para os grupos de política
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Dialog de criação e edição
-  const [openCreateDialog, setOpenCreateDialog] = useState(false)
-  const [openEditDialog, setOpenEditDialog] = useState(false)
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  // Usuário selecionado para edição
-  const [selectedUser, setSelectedUser] = useState(null)
-
-  // Formulário para criar/editar usuário
   const [userForm, setUserForm] = useState({
     nome: '',
     email: '',
     telefone: '',
     endereco_completo: '',
     grupo_politica: 'cliente',
-    senha_hash: '' // Campo para senha
-  })
+    senha_hash: ''
+  });
 
-  // Referência para input de arquivo (upload de imagem)
-  const fileInputRef = useRef(null)
-  // Armazena o ID do usuário para quem faremos o upload da imagem
-  const [selectedUserForUpload, setSelectedUserForUpload] = useState(null)
+  const fileInputRef = useRef(null);
+  const [selectedUserForUpload, setSelectedUserForUpload] = useState(null);
 
-  // Recupera o token do localStorage
-  const getToken = () => localStorage.getItem('token')
+  const getToken = () => localStorage.getItem('token');
 
   useEffect(() => {
-    fetchUsers()
+    fetchUsers();
+    fetchGrupos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
-  // Função para buscar usuários
+  // Busca a lista de usuários
   const fetchUsers = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const token = getToken()
-      const data = await listarUsuarios(token)
-      setUsers(data)
+      const token = getToken();
+      const data = await listarUsuarios(token);
+      setUsers(data);
     } catch (err) {
-      setError(err)
+      setError(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-  // Abre o diálogo de criação de usuário
-  const handleOpenCreateDialog = () => {
-    setUserForm({
-      nome: '',
-      email: '',
-      telefone: '',
-      endereco_completo: '',
-      grupo_politica: 'cliente',
-      senha_hash: ''
-    })
-    setOpenCreateDialog(true)
-  }
+  };
 
-  // Cria um novo usuário
+  // Busca a lista de grupos de política do backend
+  const fetchGrupos = async () => {
+    try {
+      const token = getToken();
+      const data = await listarGruposPolitica(token);
+      setGruposPolitica(data);
+      // Se existir algum grupo, define o primeiro como padrão
+      if (data.length > 0) {
+        setUserForm((prev) => ({ ...prev, grupo_politica: data[0] }));
+      }
+    } catch (err) {
+      console.error('Erro ao buscar grupos de política:', err);
+    }
+  };
+
+// Ao abrir o diálogo de criação:
+const handleOpenCreateDialog = () => {
+  setUserForm({
+    nome: '',
+    email: '',
+    telefone: '',
+    endereco_completo: '',
+    grupo_politica: gruposPolitica.length > 0 ? gruposPolitica[0].nome : 'cliente',
+    senha_hash: ''
+  });
+  setOpenCreateDialog(true);
+};
+
   const handleCreateUser = async () => {
-    const token = getToken()
+    const token = getToken();
     if (!token) {
-      setError('Token não encontrado. Usuário não autenticado.')
-      return
+      setError('Token não encontrado. Usuário não autenticado.');
+      return;
     }
     try {
-      setLoading(true)
-      const novoUsuario = await criarUsuario(userForm, token)
-      setUsers((prev) => [...prev, novoUsuario])
-      setOpenCreateDialog(false)
+      setLoading(true);
+      const novoUsuario = await criarUsuario(userForm, token);
+      setUsers((prev) => [...prev, novoUsuario]);
+      setOpenCreateDialog(false);
     } catch (err) {
-      setError(String(err))
+      setError(String(err));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Abre o diálogo de edição de usuário
-  const handleOpenEditDialog = (userData) => {
-    setSelectedUser(userData)
-    setUserForm({
-      nome: userData.nome || '',
-      email: userData.email || '',
-      telefone: userData.telefone || '',
-      endereco_completo: userData.endereco_completo || '',
-      grupo_politica: userData.grupo_politica || 'cliente',
-      senha_hash: '' // Não carregamos a senha anterior, deixamos vazio
-    })
-    setOpenEditDialog(true)
-  }
+ // Ao abrir o diálogo de edição:
+const handleOpenEditDialog = (userData) => {
+  setSelectedUser(userData);
+  setUserForm({
+    nome: userData.nome || '',
+    email: userData.email || '',
+    telefone: userData.telefone || '',
+    endereco_completo: userData.endereco_completo || '',
+    grupo_politica: userData.grupo_politica || (gruposPolitica.length > 0 ? gruposPolitica[0].nome : 'cliente'),
+    senha_hash: ''
+  });
+  setOpenEditDialog(true);
+};
 
-  // Atualiza o usuário selecionado
-  const handleUpdateUser = async () => {
-    if (!selectedUser) return
-    const token = getToken()
-    if (!token) {
-      setError('Token não encontrado. Usuário não autenticado.')
-      return
+const handleUpdateUser = async () => {
+  if (!selectedUser) return;
+  const token = getToken();
+  if (!token) {
+    setError('Token não encontrado. Usuário não autenticado.');
+    return;
+  }
+  try {
+    setLoading(true);
+    // Cria uma cópia dos dados do formulário
+    const formToSend = { ...userForm };
+    // Se o campo senha_hash estiver vazio, remove-o do objeto
+    if (!formToSend.senha_hash) {
+      delete formToSend.senha_hash;
     }
-    try {
-      setLoading(true)
-      const updatedUser = await atualizarUsuario(selectedUser.id, userForm, token)
-      setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? updatedUser : u)))
-      setOpenEditDialog(false)
-      setSelectedUser(null)
-    } catch (err) {
-      setError(String(err))
-    } finally {
-      setLoading(false)
-    }
+    const updatedUser = await atualizarUsuario(selectedUser.id, formToSend, token);
+    setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? updatedUser : u)));
+    setOpenEditDialog(false);
+    setSelectedUser(null);
+  } catch (err) {
+    setError(String(err));
+  } finally {
+    setLoading(false);
   }
+};
 
-  // Deleta um usuário
+
   const handleDeleteUser = async (userId) => {
-    const token = getToken()
+    const token = getToken();
     if (!token) {
-      setError('Token não encontrado. Usuário não autenticado.')
-      return
+      setError('Token não encontrado. Usuário não autenticado.');
+      return;
     }
     try {
-      setLoading(true)
-      await deletarUsuario(userId, token)
-      setUsers((prev) => prev.filter((u) => u.id !== userId))
+      setLoading(true);
+      await deletarUsuario(userId, token);
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
     } catch (err) {
-      setError(String(err))
+      setError(String(err));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Função para abrir o input de arquivo para upload da imagem de perfil
   const handleOpenUpload = (userId) => {
-    setSelectedUserForUpload(userId)
+    setSelectedUserForUpload(userId);
     if (fileInputRef.current) {
-      fileInputRef.current.click()
+      fileInputRef.current.click();
     }
-  }
+  };
 
-  // Função que lida com a seleção do arquivo e chama a função de upload
   const handleFileChange = async (e) => {
-    const file = e.target.files[0]
-    if (!file || !selectedUserForUpload) return
+    const file = e.target.files[0];
+    if (!file || !selectedUserForUpload) return;
     try {
-      setLoading(true)
-      const token = getToken()
-      // Atualizado: passa o userId para uploadProfilePicture
-      const data = await uploadProfilePicture(selectedUserForUpload, file, token)
-      // Se a API retorna o usuário atualizado, atualize a lista local:
+      setLoading(true);
+      const token = getToken();
+      const data = await uploadProfilePicture(selectedUserForUpload, file, token);
       setUsers((prev) =>
         prev.map((u) =>
           u.id === data.id ? { ...u, profile_picture_url: data.profile_picture_url } : u
         )
-      )
+      );
     } catch (err) {
-      setError('Erro ao enviar a imagem de perfil.')
+      setError('Erro ao enviar a imagem de perfil.');
     } finally {
-      setLoading(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-      setSelectedUserForUpload(null)
+      setLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setSelectedUserForUpload(null);
     }
-  }
+  };
 
-  // Colunas do DataGrid
   const columns = [
     { field: 'id', headerName: 'ID', width: 70 },
     { field: 'nome', headerName: 'Nome', width: 200 },
@@ -245,7 +253,7 @@ const AdminUsersPage = () => {
         </Box>
       )
     }
-  ]
+  ];
 
   return (
     <Box sx={{ p: 3 }}>
@@ -271,7 +279,7 @@ const AdminUsersPage = () => {
         />
       </Box>
 
-      {/* Input de arquivo oculto para upload de imagem */}
+      {/* Input para upload de imagem */}
       <input
         type="file"
         ref={fileInputRef}
@@ -280,7 +288,7 @@ const AdminUsersPage = () => {
         accept="image/*"
       />
 
-      {/* Diálogo de criação de usuário */}
+      {/* Diálogo de criação */}
       <Dialog open={openCreateDialog} onClose={() => setOpenCreateDialog(false)}>
         <DialogTitle>Criar Usuário</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
@@ -316,10 +324,21 @@ const AdminUsersPage = () => {
               label="Grupo Políticas"
               onChange={(e) => setUserForm({ ...userForm, grupo_politica: e.target.value })}
             >
-              <MenuItem value="cliente">Cliente</MenuItem>
-              <MenuItem value="admin">Admin</MenuItem>
+              {gruposPolitica.length > 0 ? (
+                gruposPolitica.map((grupo) => (
+                  <MenuItem key={grupo.id} value={grupo.nome}>
+                    {grupo.nome}
+                  </MenuItem>
+                ))
+              ) : (
+                <>
+                  <MenuItem value="cliente">Cliente</MenuItem>
+                  <MenuItem value="admin">Admin</MenuItem>
+                </>
+              )}
             </Select>
           </FormControl>
+
           <TextField
             label="Senha"
             type="password"
@@ -330,11 +349,13 @@ const AdminUsersPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCreateDialog(false)}>Cancelar</Button>
-          <Button onClick={handleCreateUser} variant="contained">Salvar</Button>
+          <Button onClick={handleCreateUser} variant="contained">
+            Salvar
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Diálogo de edição de usuário */}
+      {/* Diálogo de edição */}
       <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
         <DialogTitle>Editar Usuário</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
@@ -370,10 +391,21 @@ const AdminUsersPage = () => {
               label="Grupo Políticas"
               onChange={(e) => setUserForm({ ...userForm, grupo_politica: e.target.value })}
             >
-              <MenuItem value="cliente">Cliente</MenuItem>
-              <MenuItem value="admin">Admin</MenuItem>
+              {gruposPolitica.length > 0 ? (
+                gruposPolitica.map((grupo) => (
+                  <MenuItem key={grupo.id} value={grupo.nome}>
+                    {grupo.nome}
+                  </MenuItem>
+                ))
+              ) : (
+                <>
+                  <MenuItem value="cliente">Cliente</MenuItem>
+                  <MenuItem value="admin">Admin</MenuItem>
+                </>
+              )}
             </Select>
           </FormControl>
+
           <TextField
             label="Senha"
             type="password"
@@ -384,11 +416,13 @@ const AdminUsersPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenEditDialog(false)}>Cancelar</Button>
-          <Button onClick={handleUpdateUser} variant="contained">Salvar</Button>
+          <Button onClick={handleUpdateUser} variant="contained">
+            Salvar
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
-  )
-}
+  );
+};
 
 export default withAuth(AdminUsersPage, 'admin.create');

@@ -36,7 +36,8 @@ export default function ProfilePage() {
           nome: profileData.nome,
           email: profileData.email,
           telefone: profileData.telefone || '',
-          endereco_completo: profileData.endereco_completo || ''
+          endereco_completo: profileData.endereco_completo || '',
+          senha_hash: ''
         });
       } catch (err) {
         console.error(err);
@@ -115,11 +116,33 @@ export default function ProfilePage() {
   };
 
   // Salva as alterações do perfil
+  // const handleSaveProfile = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const token = localStorage.getItem('token');
+  //     const updatedProfile = await atualizarUsuario(profile.id, profileForm, token);
+  //     setProfile(updatedProfile);
+  //     setOpenEditDialog(false);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setError('Erro ao atualizar o perfil.');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleSaveProfile = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const updatedProfile = await atualizarUsuario(profile.id, profileForm, token);
+      
+      // Cria uma cópia dos dados do formulário
+      const profileData = { ...profileForm };
+      // Se o campo de senha estiver vazio, remove-o
+      if (!profileData.senha_hash) {
+        delete profileData.senha_hash;
+      }
+      
+      const updatedProfile = await atualizarUsuario(profile.id, profileData, token);
       setProfile(updatedProfile);
       setOpenEditDialog(false);
     } catch (err) {
@@ -129,6 +152,7 @@ export default function ProfilePage() {
       setLoading(false);
     }
   };
+  
 
   return (
     <Container sx={{ mt: 4 }}>
@@ -195,38 +219,48 @@ export default function ProfilePage() {
 
       {/* Diálogo de edição do perfil */}
       <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
-        <DialogTitle>Editar Perfil</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-          <TextField
-            label="Nome"
-            name="nome"
-            value={profileForm?.nome || ''}
-            onChange={handleProfileFormChange}
-          />
-          <TextField
-            label="Email"
-            name="email"
-            value={profileForm?.email || ''}
-            onChange={handleProfileFormChange}
-          />
-          <TextField
-            label="Telefone"
-            name="telefone"
-            value={profileForm?.telefone || ''}
-            onChange={handleProfileFormChange}
-          />
-          <TextField
-            label="Endereço"
-            name="endereco_completo"
-            value={profileForm?.endereco_completo || ''}
-            onChange={handleProfileFormChange}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEditDialog(false)}>Cancelar</Button>
-          <Button onClick={handleSaveProfile} variant="contained">Salvar</Button>
-        </DialogActions>
-      </Dialog>
+  <DialogTitle>Editar Perfil</DialogTitle>
+  <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+    <TextField
+      label="Nome"
+      name="nome"
+      value={profileForm?.nome || ''}
+      onChange={handleProfileFormChange}
+    />
+    <TextField
+      label="Email"
+      name="email"
+      value={profileForm?.email || ''}
+      onChange={handleProfileFormChange}
+    />
+    <TextField
+      label="Telefone"
+      name="telefone"
+      value={profileForm?.telefone || ''}
+      onChange={handleProfileFormChange}
+    />
+    <TextField
+      label="Endereço"
+      name="endereco_completo"
+      value={profileForm?.endereco_completo || ''}
+      onChange={handleProfileFormChange}
+    />
+    {/* Novo campo para alterar a senha */}
+    <TextField
+      label="Nova Senha"
+      name="senha_hash"
+      type="password"
+      value={profileForm?.senha_hash || ''}
+      onChange={handleProfileFormChange}
+      helperText="Preencha para alterar a senha ou deixe em branco para manter a senha atual"
+    />
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setOpenEditDialog(false)}>Cancelar</Button>
+    <Button onClick={handleSaveProfile} variant="contained">Salvar</Button>
+  </DialogActions>
+</Dialog>
+
     </Container>
   );
 }
